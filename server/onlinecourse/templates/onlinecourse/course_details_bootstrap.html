@@ -8,50 +8,48 @@
   </head>
   <body>
     <main class="container py-5">
-      <div class="mb-4">
-        <h1>{{ course.name }}</h1>
-        <p class="lead">{{ course.description }}</p>
-      </div>
+      <h1>{{ course.name }}</h1>
+      <p class="lead">{{ course.description }}</p>
 
-      <section class="mb-5">
+      <section class="my-4">
         <h2>Lessons</h2>
-        <div class="list-group">
-          {% for lesson in course.lesson_set.all %}
-            <div class="list-group-item">
-              <h5 class="mb-1">{{ lesson.title }}</h5>
-              <p class="mb-0">{{ lesson.content }}</p>
+        {% for lesson in course.lesson_set.all %}
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">Lesson {{ forloop.counter }}: {{ lesson.title }}</h5>
             </div>
-          {% empty %}
-            <p>No lessons have been added to this course.</p>
-          {% endfor %}
-        </div>
+            <div class="card-body">
+              <p class="card-text">{{ lesson.content }}</p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="alert alert-info">No lessons have been added to this course.</div>
+        {% endfor %}
       </section>
 
-      <section>
+      <section class="my-4">
         <h2>Exam</h2>
-        {% if user.is_authenticated %}
-          <form id="questionform" action="{% url 'onlinecourse:submit' course.id %}" method="POST">
-            {% csrf_token %}
-            {% for question in course.question_set.all %}
-              <div class="card mt-3">
-                <div class="card-header">
-                  <h5 class="mb-0">{{ question.question_text }}</h5>
-                </div>
-                <div class="card-body">
-                  {% for choice in question.choice_set.all %}
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="choice_{{ choice.id }}" id="choice{{ choice.id }}" value="{{ choice.id }}">
-                      <label class="form-check-label" for="choice{{ choice.id }}">{{ choice.choice_text }}</label>
-                    </div>
-                  {% endfor %}
-                </div>
+        <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
+          {% csrf_token %}
+          {% for question in course.question_set.all %}
+            <div class="card mb-3">
+              <div class="card-header">
+                <h5 class="mb-0">{{ question.content }}</h5>
               </div>
-            {% endfor %}
-            <button class="btn btn-primary mt-4" type="submit">Submit Exam</button>
-          </form>
-        {% else %}
-          <div class="alert alert-info">Please log in to take the exam.</div>
-        {% endif %}
+              <div class="card-body">
+                {% for choice in question.choice_set.all %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="choice{{ choice.id }}" id="choice{{ choice.id }}" value="{{ choice.id }}">
+                    <label class="form-check-label" for="choice{{ choice.id }}">{{ choice.content }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% empty %}
+            <div class="alert alert-info">No exam questions have been added to this course.</div>
+          {% endfor %}
+          <button class="btn btn-primary" type="submit">Submit Exam</button>
+        </form>
       </section>
     </main>
   </body>

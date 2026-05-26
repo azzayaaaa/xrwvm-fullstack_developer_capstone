@@ -10,34 +10,32 @@
     <main class="container py-5">
       <h1>{{ course.name }} Exam Result</h1>
 
-      {% if passed %}
+      {% if grade >= 80 %}
         <div class="alert alert-success mt-4">
-          <b>Congratulations, {{ user.first_name|default:user.username }}!</b>
-          You have passed the exam and completed the course with score {{ grade }}/{{ total_grade }}.
+          Congratulations, you passed the exam.
         </div>
       {% else %}
         <div class="alert alert-danger mt-4">
-          <b>Failed</b> Sorry, {{ user.first_name|default:user.username }}!
-          You have failed the exam with score {{ grade }}/{{ total_grade }}.
+          You did not pass the exam.
         </div>
       {% endif %}
 
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h4 mb-0">Score: {{ grade }}</h2>
+        </div>
+      </div>
+
       {% for question in course.question_set.all %}
-        <div class="card mt-3">
-          <div class="card-header"><h5 class="mb-0">{{ question.question_text }}</h5></div>
+        <div class="card mb-3">
+          <div class="card-header">
+            <h5 class="mb-0">{{ question.content }}</h5>
+          </div>
           <div class="card-body">
             {% for choice in question.choice_set.all %}
-              <div class="mb-2">
-                {% if choice.is_correct and choice in choices %}
-                  <span class="text-success">Correct answer: {{ choice.choice_text }}</span>
-                {% elif choice.is_correct and choice not in choices %}
-                  <span class="text-warning">Not selected: {{ choice.choice_text }}</span>
-                {% elif not choice.is_correct and choice in choices %}
-                  <span class="text-danger">Wrong answer: {{ choice.choice_text }}</span>
-                {% else %}
-                  <span>{{ choice.choice_text }}</span>
-                {% endif %}
-              </div>
+              {% if choice.is_correct %}
+                <p class="text-success mb-1">Correct answer: {{ choice.content }}</p>
+              {% endif %}
             {% endfor %}
           </div>
         </div>

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Instructor(models.Model):
@@ -36,6 +37,7 @@ class Learner(models.Model):
 class Course(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
+    pub_date = models.DateTimeField('date published', default=timezone.now)
     instructors = models.ManyToManyField(Instructor, blank=True)
     learners = models.ManyToManyField(
         Learner,
@@ -67,6 +69,12 @@ class Enrollment(models.Model):
     ]
 
     learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     date_enrolled = models.DateField(auto_now_add=True)
     mode = models.CharField(max_length=10, choices=MODE_CHOICES, default=AUDIT)
@@ -77,25 +85,27 @@ class Enrollment(models.Model):
 
 class Question(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    question_text = models.TextField()
-    grade = models.IntegerField(default=0)
+    content = models.CharField(max_length=200)
+    grade = models.IntegerField(default=50)
 
     def __str__(self):
-        return self.question_text
+        return "Question: " + self.content
+
+    def is_get_score(self, selected_ids):
+        all_answers = self.choice_set.filter(is_correct=True).count()
+        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        if all_answers == selected_correct:
+            return True
+        else:
+            return False
 
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
+    content = models.CharField(max_length=200)
     is_correct = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.choice_text
 
 
 class Submission(models.Model):
     enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
     choices = models.ManyToManyField(Choice)
-
-    def __str__(self):
-        return f'Submission {self.id} for {self.enrollment}'
