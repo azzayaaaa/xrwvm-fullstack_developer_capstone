@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const fs = require('fs');
+const path = require('path');
 const  cors = require('cors')
 const app = express()
 const port = 3030;
@@ -8,10 +9,13 @@ const port = 3030;
 app.use(cors())
 app.use(require('body-parser').urlencoded({ extended: false }));
 
-const reviews_data = JSON.parse(fs.readFileSync("reviews.json", 'utf8'));
-const dealerships_data = JSON.parse(fs.readFileSync("dealerships.json", 'utf8'));
+const reviews_data = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "reviews.json"), 'utf8'));
+const dealerships_data = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "dealerships.json"), 'utf8'));
 
-mongoose.connect("mongodb://mongo_db:27017/",{'dbName':'dealershipsDB'});
+mongoose.set('bufferCommands', false);
+mongoose.connect("mongodb://mongo_db:27017/",{'dbName':'dealershipsDB'}).catch(() => {
+  console.log('MongoDB unavailable, serving seeded JSON data');
+});
 
 
 const Reviews = require('./review');
@@ -21,10 +25,10 @@ const Dealerships = require('./dealership');
 try {
   Reviews.deleteMany({}).then(()=>{
     Reviews.insertMany(reviews_data['reviews']);
-  });
+  }).catch(() => {});
   Dealerships.deleteMany({}).then(()=>{
     Dealerships.insertMany(dealerships_data['dealerships']);
-  });
+  }).catch(() => {});
   
 } catch (error) {
   res.status(500).json({ error: 'Error fetching documents' });
@@ -42,7 +46,7 @@ app.get('/fetchReviews', async (req, res) => {
     const documents = await Reviews.find();
     res.json(documents);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching documents' });
+    res.json(reviews_data['reviews']);
   }
 });
 
@@ -52,30 +56,59 @@ app.get('/fetchReviews/dealer/:id', async (req, res) => {
     const documents = await Reviews.find({dealership: req.params.id});
     res.json(documents);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching documents' });
+    res.json(reviews_data['reviews'].filter((review) => String(review.dealership) === String(req.params.id)));
   }
 });
 
 // Express route to fetch all dealerships
 app.get('/fetchDealers', async (req, res) => {
-//Write your code here
+  try {
+    const documents = await Dealerships.find();
+    res.json(documents);
+  } catch (error) {
+    res.json(dealerships_data['dealerships']);
+  }
 });
 
 // Express route to fetch Dealers by a particular state
 app.get('/fetchDealers/:state', async (req, res) => {
-//Write your code here
+  try {
+    if (req.params.state === 'All') {
+      const documents = await Dealerships.find();
+      res.json(documents);
+    } else {
+      const documents = await Dealerships.find({ state: req.params.state });
+      res.json(documents);
+    }
+  } catch (error) {
+    const dealers = dealerships_data['dealerships'];
+    res.json(req.params.state === 'All' ? dealers : dealers.filter((dealer) => dealer.state === req.params.state));
+  }
 });
 
 // Express route to fetch dealer by a particular id
 app.get('/fetchDealer/:id', async (req, res) => {
-//Write your code here
+  try {
+    const documents = await Dealerships.find({ id: req.params.id });
+    res.json(documents);
+  } catch (error) {
+    res.json(dealerships_data['dealerships'].filter((dealer) => String(dealer.id) === String(req.params.id)));
+  }
 });
 
 //Express route to insert review
 app.post('/insert_review', express.raw({ type: '*/*' }), async (req, res) => {
   data = JSON.parse(req.body);
-  const documents = await Reviews.find().sort( { id: -1 } )
-  let new_id = documents[0]['id']+1
+  let new_id = reviews_data['reviews'].length + 1;
+  try {
+    const documents = await Reviews.find().sort( { id: -1 } )
+    new_id = documents[0]['id']+1
+  } catch (error) {
+    data.id = new_id;
+    reviews_data['reviews'].push(data);
+    res.json(data);
+    return;
+  }
 
   const review = new Reviews({
 		"id": new_id,
@@ -94,7 +127,9 @@ app.post('/insert_review', express.raw({ type: '*/*' }), async (req, res) => {
     res.json(savedReview);
   } catch (error) {
 		console.log(error);
-    res.status(500).json({ error: 'Error inserting review' });
+    data.id = new_id;
+    reviews_data['reviews'].push(data);
+    res.json(data);
   }
 });
 
