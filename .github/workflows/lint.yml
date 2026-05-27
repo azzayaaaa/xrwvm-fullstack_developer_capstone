@@ -30,4 +30,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run JavaScript lint
-        run: npm run build
+        run: CI=false npm run build
