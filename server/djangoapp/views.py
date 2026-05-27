@@ -71,6 +71,11 @@ def get_dealer_reviews(request, dealer_id):
     return JsonResponse({'status': 200, 'reviews': reviews})
 
 
+def analyze_review(request, text):
+    text = text.replace('+', ' ')
+    return JsonResponse(analyze_review_sentiments(text))
+
+
 def get_dealer_details(request, dealer_id):
     dealer = get_request(f'/fetchDealer/{dealer_id}')
     return JsonResponse({'status': 200, 'dealer': dealer})
