@@ -1,7 +1,7 @@
 name: CI/CD
 on: [push]
 jobs:
-  lint:
+  lint-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,3 +13,21 @@ jobs:
         run: pip install pylint
       - name: Run pylint
         run: pylint server/djangoapp/*.py --fail-under=5 || true
+
+  lint-javascript:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/frontend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: server/frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run JavaScript lint
+        run: npm run build

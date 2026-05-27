@@ -30,7 +30,7 @@ def login_user(request):
 
 def logout_request(request):
     logout(request)
-    return JsonResponse({'status': 200})
+    return JsonResponse({'userName': '', 'status': 200})
 
 
 @csrf_exempt
@@ -62,6 +62,10 @@ def get_dealerships(request, state='All'):
     return JsonResponse({'status': 200, 'dealers': dealerships})
 
 
+def fetch_dealerships(request, state='All'):
+    return get_dealerships(request, state)
+
+
 def get_dealer_reviews(request, dealer_id):
     reviews = get_request(f'/fetchReviews/dealer/{dealer_id}')
     for review in reviews:
@@ -81,11 +85,17 @@ def get_dealer_details(request, dealer_id):
     return JsonResponse({'status': 200, 'dealer': dealer})
 
 
+def fetch_dealer_details(request, dealer_id):
+    return get_dealer_details(request, dealer_id)
+
+
 def get_cars(request):
     if not CarModel.objects.exists():
         initiate()
     cars = [
         {
+            'make': car.car_make.name,
+            'model': car.name,
             'CarMake': car.car_make.name,
             'CarModel': car.name,
             'CarModelYear': car.year,
@@ -93,7 +103,7 @@ def get_cars(request):
         }
         for car in CarModel.objects.select_related('car_make').all()
     ]
-    return JsonResponse({'CarModels': cars})
+    return JsonResponse({'status': 200, 'CarModels': cars})
 
 
 @csrf_exempt

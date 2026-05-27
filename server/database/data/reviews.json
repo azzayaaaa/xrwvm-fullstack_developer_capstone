@@ -1,6 +1,17 @@
 {
   "reviews": [
     {
+      "id": 101,
+      "name": "Ari Johnson",
+      "dealership": 1,
+      "review": "Fantastic services and a very smooth buying experience.",
+      "purchase": true,
+      "purchase_date": "05/27/2026",
+      "car_make": "Toyota",
+      "car_model": "Camry",
+      "car_year": 2023
+    },
+    {
       "id": 1,
       "name": "Berkly Shepley",
       "dealership": 15,
