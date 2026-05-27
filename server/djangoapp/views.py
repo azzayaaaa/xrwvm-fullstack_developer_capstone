@@ -94,14 +94,10 @@ def get_cars(request):
         initiate()
     cars = [
         {
-            'make': car.car_make.name,
-            'model': car.name,
             'CarMake': car.car_make.name,
             'CarModel': car.name,
-            'CarModelYear': car.year,
-            'CarModelType': car.type,
         }
-        for car in CarModel.objects.select_related('car_make').all()
+        for car in CarModel.objects.select_related('car_make').all()[:15]
     ]
     return JsonResponse({'status': 200, 'CarModels': cars})
 
